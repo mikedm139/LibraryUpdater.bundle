@@ -48,23 +48,24 @@ def UpdateType(title, key):
 
 	oc = ObjectContainer(title2=title)
 
-	oc.add(DirectoryObject(key=Callback(UpdateSection, title=title, key=key), title='Turbo Scan'))
-	oc.add(DirectoryObject(key=Callback(UpdateSection, title=title, key=key, deep=True), title='Deep Scan'))
+	oc.add(DirectoryObject(key=Callback(UpdateSection, title=title, key=key), title='Scan'))
+	oc.add(DirectoryObject(key=Callback(UpdateSection, title=title, key=key, analyze=True), title='Analyze Media'))
 	oc.add(DirectoryObject(key=Callback(UpdateSection, title=title, key=key, force=True), title='Force Metadata Refresh'))
 
 	return oc
 
 ####################################################################################################
-def UpdateSection(title, key, force=False, deep=False):
+def UpdateSection(title, key, force=False, analyze=False):
 
 	for section in key:
-		url = GetPmsHost() + section + '/refresh'
+		if analyze:
+			url = GetPmsHost() + section + '/analyze'
+		else:
+			url = GetPmsHost() + section + '/refresh'
 
-		if force:
-			url += '?force=1'
-		elif deep:
-			url += '?deep=1'
-
+			if force:
+				url += '?force=1'
+		
 		update = HTTP.Request(url, cacheTime=0).content
 
 	if title == 'All sections':
