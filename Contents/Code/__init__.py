@@ -6,13 +6,6 @@ PMS_URL = 'http://%s/library/sections/'
 ####################################################################################################
 def Start():
 
-	Plugin.AddViewGroup('List', viewMode='List', mediaType='items')
-
-	ObjectContainer.art = R(ART)
-	ObjectContainer.title1 = NAME
-	ObjectContainer.view_group = 'List'
-	DirectoryObject.thumb = R(ICON)
-
 	HTTP.CacheTime = 0
 
 ####################################################################################################
