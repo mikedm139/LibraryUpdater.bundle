@@ -1,7 +1,8 @@
+PREFIX = '/video/libraryupdater'
 NAME = 'Library Updater'
 ART = 'art-default.jpg'
 ICON = 'icon-default.png'
-PMS_URL = 'http://%s/library/sections/'
+PMS_URL = 'http://127.0.0.1:32400/library/sections/'
 
 ####################################################################################################
 def Start():
@@ -9,14 +10,14 @@ def Start():
 	HTTP.CacheTime = 0
 
 ####################################################################################################
-@handler('/video/libraryupdater', NAME, thumb=ICON, art=ART)
+@handler(PREFIX, NAME, thumb=ICON, art=ART)
 def MainMenu():
 
 	oc = ObjectContainer(no_cache=True)
 	all_keys = []
 
 	try:
-		sections = XML.ElementFromURL(GetPmsHost()).xpath('//Directory')
+		sections = XML.ElementFromURL(PMS_URL).xpath('//Directory')
 
 		for section in sections:
 			key = section.get('key')
@@ -37,6 +38,7 @@ def MainMenu():
 	return oc
 
 ####################################################################################################
+@route(PREFIX + '/type', key=int)
 def UpdateType(title, key):
 
 	oc = ObjectContainer(title2=title)
@@ -48,18 +50,21 @@ def UpdateType(title, key):
 	return oc
 
 ####################################################################################################
+@route(PREFIX + '/section', key=int, force=bool, analyze=bool)
 def UpdateSection(title, key, force=False, analyze=False):
 
 	for section in key:
 		if analyze:
-			url = GetPmsHost() + section + '/analyze'
+			url = PMS_URL + section + '/analyze'
+			method="PUT"
 		else:
-			url = GetPmsHost() + section + '/refresh'
+			method = "GET"
+			url = PMS_URL + section + '/refresh'
 
 			if force:
 				url += '?force=1'
 		
-		update = HTTP.Request(url, cacheTime=0).content
+		Thread.Create(Update, url=url,method=method)
 
 	if title == 'All sections':
 		return ObjectContainer(header=title, message='All sections will be updated!')
@@ -67,13 +72,9 @@ def UpdateSection(title, key, force=False, analyze=False):
 		return ObjectContainer(header=title, message='All chosen sections will be updated!')
 	else:
 		return ObjectContainer(header=title, message='Section "' + title + '" will be updated!')
-
+	
 ####################################################################################################
-def GetPmsHost():
-
-	host = Prefs['host']
-
-	if host.find(':') == -1:
-		host += ':32400'
-
-	return PMS_URL % (host)
+@route(PREFIX + '/update')
+def Update(url, method):
+	update = HTTP.Request(url, cacheTime=0, method=method).content
+	return
